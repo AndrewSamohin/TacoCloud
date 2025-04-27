@@ -21,7 +21,54 @@ public class DesignTacoController {
 
     @ModelAttribute
     public void addIngredientsToModel(Model model) {
-        List<Ingredient> ingredients = Arrays.asList(
+        List<Ingredient> ingredients = getAllIngredients();
+        Type[] types = Type.values();
+        for (Type type : types) {
+            model.addAttribute(type.toString().toLowerCase(),
+                    filterByType(ingredients, type));
+        }
+    }
+    
+    @ModelAttribute(name = "tacoOrder")
+    public TacoOrder order() {
+        return new TacoOrder();
+    }
+
+    @ModelAttribute(name = "taco")
+    public Taco taco() {
+        return new Taco();
+    }
+
+    @GetMapping
+    public String showDesignForm() {
+        return "design";
+    }
+
+    @PostMapping
+    public String processTaco(@ModelAttribute Taco taco,
+                              @RequestParam("ingredients") List<String> ingredientIds,
+                              @ModelAttribute TacoOrder tacoOrder) {
+        // Получаем все доступные ингредиенты
+        List<Ingredient> allIngredients = getAllIngredients();
+
+        // Преобразуем идентификаторы в объекты Ingredient
+        List<Ingredient> selectedIngredients = allIngredients.stream()
+                .filter(ingredient -> ingredientIds.contains(ingredient.getId()))
+                .collect(Collectors.toList());
+
+        // Устанавливаем список ингредиентов в объект Taco
+        taco.setIngredients(selectedIngredients);
+
+        // Добавляем тако в заказ
+        tacoOrder.addTaco(taco);
+        log.info("Processing taco: {}", taco);
+
+        // Перенаправляем на страницу текущего заказа
+        return "redirect:/orders/current";
+    }
+
+    private List<Ingredient> getAllIngredients() {
+        return Arrays.asList(
                 new Ingredient("FLTO", "Flour Tortilla", Type.WRAP),
                 new Ingredient("COTO", "Corn Tortilla", Type.WRAP),
                 new Ingredient("GRBF", "Ground Beef", Type.PROTEIN),
@@ -33,40 +80,10 @@ public class DesignTacoController {
                 new Ingredient("SLSA", "Salsa", Type.SAUCE),
                 new Ingredient("SRCR", "Sour Cream", Type.SAUCE)
         );
-
-        Type[] types = Type.values();
-        for (Type type : types) {
-            model.addAttribute(type.toString().toLowerCase(),
-                    filterByType(ingredients, type));
-        }
     }
 
-    @ModelAttribute(name = "tacoOrder")
-    public TacoOrder order() {
-        return new TacoOrder();
-    }
-    @ModelAttribute(name = "taco")
-    public Taco taco() {
-        return new Taco();
-    }
-    @GetMapping
-    public String showDesignForm() {
-        return "design";
-    }
-
-    @PostMapping
-    public String processTaco(Taco taco,
-                              @ModelAttribute TacoOrder tacoOrder) {
-        tacoOrder.addTaco(taco);
-        log.info("Processing taco: {}", taco);
-
-        return "redirect:/design";
-    }
-
-    private Iterable<Ingredient> filterByType(
-            List<Ingredient> ingredients, Type type) {
-        return ingredients
-                .stream()
+    private Iterable<Ingredient> filterByType(List<Ingredient> ingredients, Type type) {
+        return ingredients.stream()
                 .filter(x -> x.getType().equals(type))
                 .collect(Collectors.toList());
     }

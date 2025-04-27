@@ -3,6 +3,7 @@ package com.example.taco_cloud.web;
 import com.example.taco_cloud.model.Ingredient;
 import com.example.taco_cloud.model.Type;
 import org.springframework.stereotype.Component;
+import org.springframework.core.convert.converter.Converter; 
 
 import java.util.HashMap;
 import java.util.Map;
