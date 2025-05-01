@@ -4,9 +4,11 @@ import com.example.taco_cloud.orders.TacoOrder;
 import com.example.taco_cloud.model.Ingredient;
 import com.example.taco_cloud.model.Taco;
 import com.example.taco_cloud.model.Type;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ui.Model;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -45,7 +47,7 @@ public class DesignTacoController {
     }
 
     @PostMapping
-    public String processTaco(@ModelAttribute Taco taco,
+    public String processTaco(@Valid Taco taco, Errors errors,
                               @RequestParam("ingredients") List<String> ingredientIds,
                               @ModelAttribute TacoOrder tacoOrder) {
         // Получаем все доступные ингредиенты
@@ -59,6 +61,9 @@ public class DesignTacoController {
         // Устанавливаем список ингредиентов в объект Taco
         taco.setIngredients(selectedIngredients);
 
+        if (errors.hasErrors()) {
+            return "design";
+        }
         // Добавляем тако в заказ
         tacoOrder.addTaco(taco);
         log.info("Processing taco: {}", taco);
