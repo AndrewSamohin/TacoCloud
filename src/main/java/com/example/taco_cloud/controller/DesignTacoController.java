@@ -3,14 +3,17 @@ package com.example.taco_cloud.controller;
 import com.example.taco_cloud.orders.TacoOrder;
 import com.example.taco_cloud.model.Ingredient;
 import com.example.taco_cloud.model.Taco;
-import com.example.taco_cloud.model.Type;
+import com.example.taco_cloud.model.Ingredient.Type;
+import com.example.taco_cloud.repository.IngredientRepository;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -21,10 +24,17 @@ import java.util.stream.Collectors;
 @SessionAttributes("tacoOrder")
 public class DesignTacoController {
 
+    private final IngredientRepository ingredientRepo;
+
+    @Autowired
+    public DesignTacoController(IngredientRepository ingredientRepo) {
+        this.ingredientRepo = ingredientRepo;
+    }
+
     @ModelAttribute
     public void addIngredientsToModel(Model model) {
-        List<Ingredient> ingredients = getAllIngredients();
-        Type[] types = Type.values();
+        Iterable<Ingredient> ingredients = ingredientRepo.findAll();
+        Type[] types = Ingredient.Type.values();
         for (Type type : types) {
             model.addAttribute(type.toString().toLowerCase(),
                     filterByType(ingredients, type));
@@ -87,9 +97,13 @@ public class DesignTacoController {
         );
     }
 
-    private Iterable<Ingredient> filterByType(List<Ingredient> ingredients, Type type) {
-        return ingredients.stream()
-                .filter(x -> x.getType().equals(type))
-                .collect(Collectors.toList());
+    private Iterable<Ingredient> filterByType(Iterable<Ingredient> ingredients, Type type) {
+        List<Ingredient> filtered = new ArrayList<>();
+        for (Ingredient ingredient : ingredients) {
+            if (ingredient.getType().equals(type)) {
+                filtered.add(ingredient);
+            }
+        }
+        return filtered;
     }
 }
